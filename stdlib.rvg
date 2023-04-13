@@ -11,8 +11,8 @@
     [lam [] l]
     [fail l {Expected lam of [id k] parameters}]]]]]
 
-[def (->) [lam [(arg-check) (result-check)]
-  [lam [(l arg-check)]
+[def (->) [lam [(result-check)]
+  [lam [(l)]
     [applierify-varargs [lam [(applier)]
       [result-check [applier l]]]]]]]
 [def (assertify) [lam [(? [lam! {1}]) (description)] [lam [(checkee)]
