@@ -12,13 +12,6 @@
 [def (>=) [make-condition {bgeu} {blt}]]
 [def (==) [make-condition {beq} {bne}]]
 [def (!=) [make-condition {bne} {beq}]]
-[def (branch3) [lam [(condition condition!) (instrs [cycles! {2}])]
-  [def (assembly) {
-    [id { [id [[condition {DONE}] false]] } ]
-    [id instrs]
-    DONE:
-  }]
-  [[unsafe-assert-exact-cycles {3}] assembly]]]
 [def (branch~) [lam [(condition condition!) (asm block!)] {
   [[condition {DONE}] false]
   [id asm]
@@ -76,9 +69,7 @@
         [[assembly,cycles false] num-iterations]]
       [assembly,cycles true]]
   }]]
-[def (prologue-epilogue!) [->
-  [lamof [∘ num! [∘ [>=! {0}] [<! {12}]]]]
-  block!]]
+[def (prologue-epilogue!) [∘ [lamof [∘ num! [∘ [>=! {0}] [<! {12}]]]] [-> block!]]]
 [def (stackpush) [lam [(s|t|a frag!)] [lam [(n)]
   [[[fold-range {1} {0} n] {addi sp sp [* {4} n]}]
     [lam [(acc block!) (k num!)] {
@@ -99,13 +90,6 @@
     [[println {.end}]]]]]
 [def (prologue prologue-epilogue!) [stackpush {s}]]
 [def (epilogue prologue-epilogue!) [stackpop {s}]]
-[def (mul4) [lam [(rd output!) (rs1 input!)] {
-  slli rd rs1 2
-}]]
-[def (mul5) [lam [(rd output!) (rs1 input!)] {
-  [mul4 rd rs1]
-  add rd rd rs1
-}]]
 [def (busywait) [lam [(load [-> [lamof output!] block!]) (c0 clobber!)] {
   LOOP:
   [load c0]
