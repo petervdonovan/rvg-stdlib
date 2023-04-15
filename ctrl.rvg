@@ -69,7 +69,7 @@
         [[assembly,cycles false] num-iterations]]
       [assembly,cycles true]]
   }]]
-[def (prologue-epilogue!) [∘ [lamof [∘ num! [∘ [>=! 0] [<! {12}]]]] [-> block!]]]
+[def (prologue-epilogue!) [∘ [lamof [∘ num! [∘ [>=! 0] [<! 12]]]] [-> block!]]]
 [def (stackpush) [lam [(s|t|a frag!)] [lam [(n)]
   [[[fold-range 1 0 n] {addi sp sp [* 4 n]}]
     [lam [(acc block!) (k num!)] {

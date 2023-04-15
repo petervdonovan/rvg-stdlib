@@ -1,7 +1,11 @@
+[mu [(program)]
 [def (branch3) [lam [(condition condition!) (instrs [cycles! 2])]
   [def (assembly) {
     [id { [id [[condition {DONE}] false]] } ]
     [id instrs]
     DONE:
   }]
+  [[print assembly]]
   [[unsafe-assert-exact-cycles 3] assembly]]]
+[program]
+]
