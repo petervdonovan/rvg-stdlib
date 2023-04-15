@@ -1,7 +1,7 @@
-[def (branch3) [lam [(condition condition!) (instrs [cycles! {2}])]
+[def (branch3) [lam [(condition condition!) (instrs [cycles! 2])]
   [def (assembly) {
     [id { [id [[condition {DONE}] false]] } ]
     [id instrs]
     DONE:
   }]
-  [[unsafe-assert-exact-cycles {3}] assembly]]]
+  [[unsafe-assert-exact-cycles 3] assembly]]]

@@ -18,19 +18,19 @@
   DONE:
   }]]
 [def (unroll) [lam [(n num!) (body [-> [lamof num!] block!])]
-  [[[fold-range {1} {0} n] {}]
+  [[[fold-range 1 0 n] {}]
   [lam [(acc) (i)] {
     [id acc]
     [body i]
   }]]]]
 [def (join) [lam [(n num!) (glue block!) (body [-> [lamof num!] block!])] {
-  [[[fold-range {1} {0} [- n {1}]] {}]
+  [[[fold-range 1 0 [- n 1]] {}]
   [lam [(acc) (i)] {
     [id acc]
     [body i]
     [id glue]
   }]]
-  [body [- n {1}]]}]]
+  [body [- n 1]]}]]
 [def (repeat~) [lam [(n num!) (body block!)]
   [unroll n [lam [(_)] body]]]]
 [def (repeat) [lam [(n num!) (body block!)]
@@ -38,13 +38,13 @@
     [repeat~ n body]]]]
 [def (for) [lam [
     (start reg!) (stop reg!)
-    (step num! [>! {0}])
+    (step num! [>! 0])
     (body block!)]
-  [def (addition-and-branching-cycles) {4}]
+  [def (addition-and-branching-cycles) 4]
   [def (total-cycles [lamof num!]) [lam [(num-iterations)] [-
     [* num-iterations
       [+ [cycles? body] addition-and-branching-cycles]]
-    {2}]]]
+    2]]]
   [def (assembly) {
     LOOP:
     [id body]
@@ -54,14 +54,14 @@
   [pair assembly total-cycles]]]
 [def (for_startup+iterations*<body+4>-2) [lam [
     (counter reg!) (clobber reg!)
-    (start num!) (stop num! [>! start]) (step num! [>! {0}])
+    (start num!) (stop num! [>! start]) (step num! [>! 0])
     (body block!)]
   [def (stopreg) clobber]
   [def (startup) {
     li counter start
     li stopreg stop
   }]
-  [def (num-iterations) [/ [- start stop] [- {0} step]]]
+  [def (num-iterations) [/ [- start stop] [- 0 step]]]
   [def (assembly,cycles pair!) [for counter stopreg step body]]
   {
     [id startup]
@@ -69,18 +69,18 @@
         [[assembly,cycles false] num-iterations]]
       [assembly,cycles true]]
   }]]
-[def (prologue-epilogue!) [∘ [lamof [∘ num! [∘ [>=! {0}] [<! {12}]]]] [-> block!]]]
+[def (prologue-epilogue!) [∘ [lamof [∘ num! [∘ [>=! 0] [<! {12}]]]] [-> block!]]]
 [def (stackpush) [lam [(s|t|a frag!)] [lam [(n)]
-  [[[fold-range {1} {0} n] {addi sp sp [* {4} n]}]
+  [[[fold-range 1 0 n] {addi sp sp [* 4 n]}]
     [lam [(acc block!) (k num!)] {
-      sw [id s|t|a][id k] [* {4} k](sp)
+      sw [id s|t|a][id k] [* 4 k](sp)
       [id acc]
     }]]]]]
 [def (stackpop) [lam [(s|t|a frag!)] [lam [(n)]
-  [[[fold-range {1} {0} n] {addi sp sp [* {-4} n]}]
+  [[[fold-range 1 0 n] {addi sp sp [* {-4} n]}]
     [lam [(acc block!) (k num!)] {
       [id acc]
-      lw [id s|t|a][id k] [* {4} k](sp)
+      lw [id s|t|a][id k] [* 4 k](sp)
     }]]]]]
 [def (file) [lam [(function-names frag!) (body block!)]
   [mu []
