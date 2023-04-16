@@ -17,7 +17,7 @@
   [id asm]
   DONE:
   }]]
-[def (unroll) [lam [(n num!) (body [-> [lamof num!] block!])]
+[def (unroll) [lam [(n num!) (body [lamof num!] [-> block!])]
   [[[fold-range 1 0 n] {}]
   [lam [(acc) (i)] {
     [id acc]
@@ -77,7 +77,7 @@
       [id acc]
     }]]]]]
 [def (stackpop) [lam [(s|t|a frag!)] [lam [(n)]
-  [[[fold-range 1 0 n] {addi sp sp [* {-4} n]}]
+  [[[fold-range 1 0 n] {addi sp sp [* -4 n]}]
     [lam [(acc block!) (k num!)] {
       [id acc]
       lw [id s|t|a][id k] [* 4 k](sp)
