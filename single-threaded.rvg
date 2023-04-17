@@ -5,7 +5,6 @@
     [id instrs]
     DONE:
   }]
-  [[print assembly]]
   [[unsafe-assert-exact-cycles 3] assembly]]]
 [program]
 ]
