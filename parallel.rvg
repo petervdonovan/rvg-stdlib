@@ -1,12 +1,12 @@
 [mu [(program)]
-[def (get-rank!) [∘ [lamof! reg!] [-> block!]]]
-[def (serialize [-> [-> block!]])
+[def (get-rank!) [∘ [lamof reg!] [-> block!]]]
+[def (critical [-> [-> block!]])
   [lam [(n-ranks num!) (get-rank get-rank!)]
-  [lam [(do-critical block!) (clobber0 reg!)] {
+  [lam [(clobber0 reg!) (do-critical block!)] {
     [get-rank clobber0]
-    [repeat n-ranks [if [= {zero} clobber0] {
-      [id do-critical]
-      addi clobber0 -1
-    }]]
-}]]
+    [repeat n-ranks {
+      [if+2 [== {zero} clobber0] do-critical]
+      addi clobber0 clobber0 -1
+    }]
+}]]]
 [program]]

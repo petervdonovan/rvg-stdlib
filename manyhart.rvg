@@ -9,8 +9,8 @@
 [;; { execute block if condition is true in time = (2 + cycles of block) }]
 [def (if+2) [lam [(condition condition!) (instrs block!)]
   [def (cycles num!) [cycles? instrs]]
-  [def (assembly) {
-    [[condition {DONE}] false]
+  [def (assembly block!) {
+    [[condition {WAIT}] false]
     [id instrs]
     j DONE
     WAIT:
