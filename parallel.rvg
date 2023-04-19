@@ -9,4 +9,10 @@
       addi clobber0 clobber0 -1
     }]
 }]]]
+[def (single [-> [-> block!]])
+  [lam [(get-rank get-rank!)]
+  [lam [(clobber0 reg!) (do-single block!)] {
+    [get-rank clobber0]
+    [if+2 [== {zero} clobber0] do-single]
+  }]]]
 [program]]
