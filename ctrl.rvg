@@ -1,6 +1,8 @@
 [mu [(program)]
 [def (condition!) [assertify [lam [(x)] [[hasattr {condition}] x]] {a condition}]]
-[def (make-condition) [lam [(true-branch frag!) (false-branch frag!)] [lam [(rs1 reg!) (rs2 reg!)]
+[def (make-condition)
+  [lam [(true-branch frag!) (false-branch frag!)]
+  [lam [(rs1 reg!) (rs2 reg!)]
   [[addattr {condition}]
     [lam [(label frag!)]
       [pair {

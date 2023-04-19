@@ -1,0 +1,25 @@
+[mu [(program)]
+[;; { Control-flow primitives for the case when the number of harts is large enough that all
+  instructions, including loads, finish in one thread cycle. }]
+
+[;; { delay for k cycles }]
+[def (delay [-> block!]) [lam [(k num!)]
+  [repeat k {nop}]]]
+
+[;; { execute block if condition is true in time = (2 + cycles of block) }]
+[def (if+2) [lam [(condition condition!) (instrs block!)]
+  [def (cycles num!) [cycles? instrs]]
+  [def (assembly) {
+    [[condition {DONE}] false]
+    [id instrs]
+    j DONE
+    WAIT:
+    [delay [+ 1 cycles]]
+    DONE:
+  }]
+  [;; { overhead = time to branch/not branch + time to jump }]
+  [def (overhead) 2]
+  [[unsafe-assert-exact-cycles [+ overhead cycles]] assembly]]]
+
+
+[program]]
