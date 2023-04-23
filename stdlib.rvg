@@ -1,4 +1,4 @@
-[lam [(program)]
+[mu [(program)]
 
 [def (id) [lam [(x)] x]]
 
