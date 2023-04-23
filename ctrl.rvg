@@ -14,6 +14,8 @@
 [def (>=) [make-condition {bgeu} {blt}]]
 [def (==) [make-condition {beq} {bne}]]
 [def (!=) [make-condition {bne} {beq}]]
+[def (+acc [-> block!]) [lam [(acc input! output!) (other input!)] {add acc acc other}]]
+[def (-acc [-> block!]) [lam [(acc input! output!) (other input!)] {sub acc acc other}]]
 [def (branch~) [lam [(condition condition!) (asm block!)] {
   [[condition {DONE}] false]
   [id asm]
@@ -38,7 +40,7 @@
 [def (repeat) [lam [(n num!) (body block!)]
   [[unsafe-assert-exact-cycles [* n [cycles? body]]]
     [repeat~ n body]]]]
-[def (for) [lam [
+[def (for~) [lam [
     (start reg!) (stop reg!)
     (step num! [>! 0])
     (body block!)]
@@ -54,7 +56,7 @@
     blt start stop LOOP
   }]
   [pair assembly total-cycles]]]
-[def (for_startup+iterations*<body+4>-2) [lam [
+[def (for) [lam [
     (counter reg!) (clobber reg!)
     (start num!) (stop num! [>! start]) (step num! [>! 0])
     (body block!)]
@@ -72,17 +74,17 @@
       [assembly,cycles true]]
   }]]
 [def (prologue-epilogue!) [∘ [lamof [∘ num! [∘ [>=! 0] [<! 12]]]] [-> block!]]]
-[def (stackpush) [lam [(s|t|a frag!)] [lam [(n)]
+[def (stackpush) [lam [(s/t/a frag!)] [lam [(n)]
   [[[fold-range 1 0 n] {addi sp sp [* 4 n]}]
     [lam [(acc block!) (k num!)] {
-      sw [id s|t|a][id k] [* 4 k](sp)
+      sw [id s/t/a][id k] [* 4 k](sp)
       [id acc]
     }]]]]]
-[def (stackpop) [lam [(s|t|a frag!)] [lam [(n)]
+[def (stackpop) [lam [(s/t/a frag!)] [lam [(n)]
   [[[fold-range 1 0 n] {addi sp sp [* -4 n]}]
     [lam [(acc block!) (k num!)] {
       [id acc]
-      lw [id s|t|a][id k] [* 4 k](sp)
+      lw [id s/t/a][id k] [* 4 k](sp)
     }]]]]]
 [def (file) [lam [(function-names frag!) (body block!)]
   [mu []
@@ -96,4 +98,15 @@
   LOOP:
   [load c0]
   beqz c0 LOOP}]]
+[def (init-allocate [-> block!]) [lam [(clobber0 clobber!)] {
+  li clobber0 4
+  sw clobber0 0(gp)
+}]]
+[def (allocate [-> block!])
+  [lam [(nwords num!) (ptr output!)] {
+    lw ptr 0(gp)
+    addi ptr ptr [* 4 nwords]
+    sw ptr 0(gp)
+    addi ptr ptr [* -4 nwords]
+  }]]
 [program]]

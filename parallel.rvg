@@ -11,11 +11,35 @@
       addi clobber0 clobber0 increment
     }]
 }]]]]
-[def (critical [-> [lamof reg! block!]] [-> [-> block!]]) [lam [(a) (b)] [[critical-mask a b] [lam [(_)] {}] -1]]]
+[def (critical [-> [lamof reg! block!]] [-> [-> block!]])
+  [lam [(a) (b)]
+    [[critical-mask a b] [lam [(_)] {}] -1]]]
 [def (single [-> [-> block!]])
   [lam [(get-rank get-rank!)]
   [lam [(clobber0 reg!) (do-single block!)] {
     [get-rank clobber0]
     [if+2 [== {zero} clobber0] do-single]
   }]]]
+[def (init) [lam [(nranks-shmem num!) (single-shmem [-> block!])] {
+  [single-shmem {a0} [init-allocate {a1}]]
+  [single-shmem {a0} [allocate nranks-shmem {a1}]]
+  }]]
+[def (reduce-shmem [-> [-> block!]])
+  [lam [(n-ranks num!) (get-rank get-rank!)]
+    [def (chatbuf-offset) 4]
+    [lam [
+      (op [lamof reg! reg!] [-> block!])
+      (value input! output!)
+      (c0 clobber!)
+      (c1 clobber!)
+    ] {
+      mv c0 gp
+      addi c0 c0 chatbuf-offset
+      [get-rank c1]
+      add c1 c0 c1
+      sw value 0(c1)
+      [unroll n-ranks [lam [(n)] {
+        lw c1 n(c0)
+        [op value c1]}]]
+      }]]]
 [program]]
