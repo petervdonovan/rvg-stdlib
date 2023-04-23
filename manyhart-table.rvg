@@ -1,6 +1,4 @@
 [mu [(program)]
-[;; { Control-flow primitives for the case when the number of harts is large enough that all
-  instructions, including loads, finish in one thread cycle. }]
 
 [def (cycles-of-csr) 1]
 [def (cycles-of-iarith) 1]
