@@ -1,0 +1,8 @@
+[mu [(program)]
+[def (cycles-of-csr) 1]
+[def (cycles-of-iarith) 1]
+[def (cycles-of-load) 2]
+[def (cycles-of-rtype) 1]
+[def (cycles-of-store) 1]
+[def (cycles-of-utype) 1]
+[program]]
