@@ -2,6 +2,13 @@
 [;; { Control-flow primitives for the case when the number of harts is large enough that all
   instructions, including loads, finish in one thread cycle. }]
 
+[def (cycles-of-csr) 1]
+[def (cycles-of-iarith) 1]
+[def (cycles-of-load) 1]
+[def (cycles-of-rtype) 1]
+[def (cycles-of-store) 1]
+[def (cycles-of-utype) 1]
+
 [;; { delay for k cycles. TODO: use loops when k > 2 + 1 }]
 [def (delay [-> block!]) [lam [(k num!)]
   [repeat k {nop}]]]
