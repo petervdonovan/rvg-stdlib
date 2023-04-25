@@ -57,7 +57,7 @@
   }]
   [pair assembly total-cycles]]]
 [def (for) [lam [
-    (counter reg!) (clobber reg!)
+    (counter clobber!) (clobber clobber!)
     (start num!) (stop num! [>! start]) (step num! [>! 0])
     (body block!)]
   [def (stopreg) clobber]
