@@ -33,6 +33,8 @@
     [lam [(get bool!)]
       [get a b]]]]]
 [def (pair!) [hasattr! {pair}]]
+[def (fst) [lam [(p pair!)] [pair true]]]
+[def (snd) [lam [(p pair!)] [pair false]]]
 [def (range!) [hasattr! {range}]]
 [def (println) [lam [(s)] [lam [] [[print s]] [[print {
 }]]]]]

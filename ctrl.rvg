@@ -57,15 +57,18 @@
   }]
   [pair assembly total-cycles]]]
 [def (for) [lam [
-    (counter clobber!) (clobber clobber!)
-    (start num!) (stop num! [>! start]) (step num! [>! 0])
+    (counter reg!)
+    (clobber clobber!)
+    (start num!)
+    (stop num! [>! start])
+    (step num! [>! 0])
     (body block!)]
   [def (stopreg) clobber]
   [def (startup) {
     li counter start
     li stopreg stop
   }]
-  [def (num-iterations) [/ [- start stop] [- 0 step]]]
+  [def (num-iterations) [/ [- stop start] step]]
   [def (assembly,cycles pair!) [for~ counter stopreg step body]]
   {
     [id startup]
