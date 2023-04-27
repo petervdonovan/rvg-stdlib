@@ -72,7 +72,8 @@
   [def (assembly,cycles pair!) [for~ counter stopreg step body]]
   {
     [id startup]
-    [[unsafe-assert-exact-cycles
+    [
+      [unsafe-assert-exact-cycles
         [[assembly,cycles false] num-iterations]]
       [assembly,cycles true]]
   }]]

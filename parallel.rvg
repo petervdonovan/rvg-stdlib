@@ -44,21 +44,26 @@
         lw c1 [* 4 n](c0)
         [op value c1]}]]
       }]]]
-[def (par-for [-> [-> block!]])
+[def (parfor [-> [-> block!]])
   [lam [(n-ranks num!) (get-rank get-rank!)]
   [lam [
     (counter reg!)
-    (stop clobber!)
+    (stopreg clobber!)
     (start num!)
     (stop num! [>! start])
     (step num! [>! 0])
     (body block!)]
-  ]
-    [def (asm,cycles) [for~ counter stop step body]]
+    [def (step') [* step n-ranks]]
+    [def (asm,cycles) [for~ counter stopreg step' body]]
+    [def (loop) [
+      [unsafe-assert-exact-cycles
+        [[snd asm,cycles] [/ [- stop start] step']]]
+      [fst asm,cycles]]]
     {
       [get-rank counter]
       slli counter counter [log2 step]
       addi counter counter start
-
-    }]]
+      li stopreg stop
+      [id loop]
+    }]]]
 [program]]
