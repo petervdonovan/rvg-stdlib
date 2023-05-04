@@ -22,5 +22,14 @@
   [;; { overhead = time to branch/not branch + time to jump }]
   [[unsafe-assert-exact-cycles [+ 2 ifcycles]] assembly]]]
 [def (if+2) [lam [(condition condition!) (instrs block!)] [ifelse condition instrs {}]]]
-
+[def (best)
+  [lam [(compare [-> condition!])]
+  [lam [(rd output!) (rs1 input!) (rs2 input!)]
+  [ifelse [compare rs1 rs2] {
+    mv rd rs1
+  } {
+    mv rd rs2
+  }]]]]
+[def (max [-> block!]) [best >=]]
+[def (min [-> block!]) [best <]]
 [program]]
