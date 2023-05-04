@@ -4,15 +4,15 @@
 [def (critical-mask [-> [-> [-> block!]]])
   [lam [(n-ranks num!) (get-rank get-rank!)]
   [lam [(mask [lamof [∘ input! output!]] [-> block!]) (increment num!)]
-  [lam [(c0 reg!) (do-critical block!)] {
+  [lam [(c0 reg!) (c1 reg!) (do-critical block!)] {
     [get-rank c0]
     [mask c0]
     [repeat n-ranks {
-      [if+2 c0 [== {zero} c0] do-critical]
+      [if+2 c1 [== {zero} c0] do-critical]
       addi c0 c0 increment
     }]
 }]]]]
-[def (critical [-> [lamof reg! block!]] [-> [-> block!]])
+[def (critical [-> [lamof clobber! clobber! block!]] [-> [-> block!]])
   [lam [(a) (b)]
     [[critical-mask a b] [lam [(_)] {}] -1]]]
 [def (single [-> [-> block!]])

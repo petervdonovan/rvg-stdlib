@@ -7,13 +7,13 @@
 [def (delay [-> block!]) [lam [(c0 clobber!) (k num! [>=! 0])]
   [[<? k 4]
     [delay-short k]
-    {
+    [[unsafe-assert-exact-cycles k] {
       li c0 [/ [- k 1] 2]
       DELAY_LOOP:
       addi c0 c0 -1
       bnez c0 DELAY_LOOP
       [delay-short [% [- k 1] 2]]
-    }]]]
+    }]]]]
 
 [;; { execute block if condition is true in time = (2 + cycles of block) }]
 [def (ifelse [-> block!]) [lam [(c0 clobber!) (condition condition!) (do-if block!) (do-else block!)]
