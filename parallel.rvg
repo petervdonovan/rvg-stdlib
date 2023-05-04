@@ -81,8 +81,11 @@
         j JOIN[id n]
       }]]
     [[unsafe-assert-exact-cycles
-      [+ [+ [* 2 cycles-of-taken-branch] get-rank-cycles]
-        [+ [* 2 n-ranks] k]]]
+      [+
+        get-rank-cycles
+        [* 2 cycles-of-taken-branch]
+        k
+        [* 2 n-ranks]]]
       {
         [get-rank c0]
         [unroll n-ranks [lam [(n)]
