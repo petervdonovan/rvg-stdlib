@@ -1,20 +1,15 @@
 [mu [(program)]
 [def (get-rank!) [∘ [lamof reg!] [-> block!]]]
-[def (critical-mask [-> [-> [-> block!]]])
+[def (critical [-> [-> block!]])
   [lam [(n-ranks num!) (get-rank get-rank!)]
-  [lam [(mask [lamof [∘ input! output!]] [-> block!]) (increment num!)]
   [lam [(c0 reg!) (c1 reg!) (do-critical block!)] {
     [get-rank c0]
-    [mask c0]
     [/* {Note: for a nontrivial mask, no rank will be active after the beginning.}]
     [repeat n-ranks {
       [if+2 c1 [== {zero} c0] do-critical]
-      addi c0 c0 increment
+      addi c0 c0 -1
     }]
-}]]]]
-[def (critical [-> [lamof clobber! clobber! block!]] [-> [-> block!]])
-  [lam [(a) (b)]
-    [[critical-mask a b] [lam [(_)] {}] -1]]]
+}]]]
 [def (single [-> [-> block!]])
   [lam [(get-rank get-rank!)]
   [lam [(c0 reg!) (do-single block!)] {
