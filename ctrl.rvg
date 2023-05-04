@@ -44,11 +44,11 @@
     (start reg!) (stop reg!)
     (step num! [>! 0])
     (body block!)]
-  [def (addition-and-branching-cycles) 4]
+  [def (addition-and-branching-cycles) [+ cycles-of-iarith cycles-of-taken-branch]]
   [def (total-cycles [lamof num!]) [lam [(num-iterations)] [-
     [* num-iterations
       [+ [cycles? body] addition-and-branching-cycles]]
-    2]]]
+    [- cycles-of-taken-branch cycles-of-not-taken-branch]]]]
   [def (assembly) {
     LOOP:
     [id body]
@@ -112,5 +112,6 @@
     addi ptr ptr [* 4 nwords]
     sw ptr 0(gp)
     addi ptr ptr [* -4 nwords]
+    add ptr ptr gp
   }]]
 [program]]

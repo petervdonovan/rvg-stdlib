@@ -1,5 +1,6 @@
 [mu [(program)]
 [def (get-rank!) [∘ [lamof reg!] [-> block!]]]
+[;; {FIXME: for a nontrivial mask you could end up doing more repetitions than necessary!}]
 [def (critical-mask [-> [-> [-> block!]]])
   [lam [(n-ranks num!) (get-rank get-rank!)]
   [lam [(mask [lamof [∘ input! output!]] [-> block!]) (increment num!)]

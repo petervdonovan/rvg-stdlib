@@ -6,5 +6,7 @@
 [def (cycles-of-rtype) 1]
 [def (cycles-of-store) 1]
 [def (cycles-of-utype) 1]
+[def (cycles-of-taken-branch) 1]
+[def (cycles-of-not-taken-branch) 1]
 
 [program]]
