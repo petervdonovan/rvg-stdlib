@@ -67,4 +67,35 @@
       li stopreg stop
       [id loop]
     }]]]
+[def (forkjoin [-> [-> block!]])
+  [lam [(n-ranks num!) (get-rank get-rank!)]
+  [lam [(c0 clobber!) (block [-> block!])]
+    [def (k) [cycles? [block 0]]]
+    [def (get-rank-cycles) [cycles? [get-rank c0]]]
+    [def (block [-> [cycles! k]]) block]
+    [def (block)
+      [lam [(n num!)]
+      {
+        FORK[id n]:
+        [block n]
+        j JOIN[id n]
+      }]]
+    [[unsafe-assert-exact-cycles
+      [+ [+ [* 2 cycles-of-taken-branch] get-rank-cycles]
+        [+ [* 2 n-ranks] k]]]
+      {
+        [get-rank c0]
+        [unroll n-ranks [lam [(n)]
+          {
+            beqz c0 FORK[id n]
+            addi c0 c0 -1
+          }]]
+        [unroll n-ranks block]
+        [unroll n-ranks [lam [(n)]
+          {
+            nop
+            nop
+            JOIN[id n]:
+          }]]
+      }]]]]
 [program]]
