@@ -1,5 +1,6 @@
 [mu [(program)]
 [def (get-rank!) [∘ [lamof reg!] [-> block!]]]
+
 [def (critical [-> [-> block!]])
   [lam [(n-ranks num!) (get-rank get-rank!)]
   [lam [(c0 reg!) (c1 reg!) (do-critical block!)] {
@@ -10,16 +11,19 @@
       addi c0 c0 -1
     }]
 }]]]
+
 [def (single [-> [-> block!]])
   [lam [(get-rank get-rank!)]
   [lam [(c0 reg!) (do-single block!)] {
     [get-rank c0]
     [if+2 c0 [== {zero} c0] do-single]
   }]]]
+
 [def (init) [lam [(nranks-shmem num!) (single-shmem [-> block!])] {
   [single-shmem {a0} [init-allocate {a1}]]
   [single-shmem {a0} [allocate nranks-shmem {a1}]]
   }]]
+
 [def (reduce-shmem [-> [-> block!]])
   [lam [(n-ranks num!) (get-rank get-rank!)]
     [def (chatbuf-offset) 4]
@@ -40,6 +44,7 @@
         lw c1 [* 4 n](c0)
         [op value c1]}]]
       }]]]
+
 [def (parfor [-> [-> block!]])
   [lam [(n-ranks num!) (get-rank get-rank!)]
   [lam [
@@ -62,25 +67,24 @@
       li stopreg stop
       [id loop]
     }]]]
+
 [def (forkjoin [-> [-> block!]])
   [lam [(n-ranks num!) (get-rank get-rank!)]
   [lam [(c0 clobber!) (block [-> block!])]
-    [def (k) [cycles? [block 0]]]
+    [def (k) [[[fold-range 1 0 n-ranks] 0]
+      [lam [(acc num!) (n num!)] [max acc [cycles? [block n]]]]]]
     [def (get-rank-cycles) [cycles? [get-rank c0]]]
-    [def (block [-> [cycles! k]]) block]
     [def (block)
       [lam [(n num!)]
+      [def (block) [block n]]
       {
         FORK[id n]:
-        [block n]
+        [id block]
+        [delay c0 [- k [cycles? block]]]
         j JOIN[id n]
       }]]
     [[unsafe-assert-exact-cycles
-      [+
-        get-rank-cycles
-        [* 2 cycles-of-taken-branch]
-        k
-        [* 2 n-ranks]]]
+      [+ get-rank-cycles cycles-of-taken-branch k cycles-of-taken-branch [* 2 n-ranks]]]
       {
         [get-rank c0]
         [unroll n-ranks [lam [(n)]

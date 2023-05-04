@@ -2,18 +2,19 @@
 [;; { Control-flow primitives for the case when the number of harts is large enough that all
   instructions, including loads, finish in one thread cycle. }]
 
-[;; { delay for k cycles. TODO: use loops when k > 2 + 1 }]
+[;; { delay for k cycles. }]
 [def (delay-short [-> block!]) [lam [(k num!)] [repeat k {nop}]]]
+
 [def (delay [-> block!]) [lam [(c0 clobber!) (k num! [>=! 0])]
-  [[<? k 4]
-    [delay-short k]
-    [[unsafe-assert-exact-cycles k] {
+  [if [<? k 4]
+    [lam [] [delay-short k]]
+    [lam [] [[unsafe-assert-exact-cycles k] {
       li c0 [/ [- k 1] 2]
       DELAY_LOOP:
       addi c0 c0 -1
       bnez c0 DELAY_LOOP
       [delay-short [% [- k 1] 2]]
-    }]]]]
+    }]]]]]
 
 [;; { execute block if condition is true in time = (2 + cycles of block) }]
 [def (ifelse [-> block!]) [lam [(c0 clobber!) (condition condition!) (do-if block!) (do-else block!)]
@@ -39,6 +40,6 @@
   } {
     mv rd rs2
   }]]]]
-[def (max [-> block!]) [best >=]]
-[def (min [-> block!]) [best <]]
+[def (max~ [-> block!]) [best >=]]
+[def (min~ [-> block!]) [best <]]
 [program]]
