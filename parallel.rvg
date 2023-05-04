@@ -1,12 +1,12 @@
 [mu [(program)]
 [def (get-rank!) [∘ [lamof reg!] [-> block!]]]
-[;; {FIXME: for a nontrivial mask you could end up doing more repetitions than necessary!}]
 [def (critical-mask [-> [-> [-> block!]]])
   [lam [(n-ranks num!) (get-rank get-rank!)]
   [lam [(mask [lamof [∘ input! output!]] [-> block!]) (increment num!)]
   [lam [(c0 reg!) (c1 reg!) (do-critical block!)] {
     [get-rank c0]
     [mask c0]
+    [/* {Note: for a nontrivial mask, no rank will be active after the beginning.}]
     [repeat n-ranks {
       [if+2 c1 [== {zero} c0] do-critical]
       addi c0 c0 increment
