@@ -12,12 +12,17 @@
     }]
 }]]]
 
+[def (single-else [-> [-> block!]])
+  [lam [(get-rank get-rank!)]
+  [lam [(c0 reg!) (do-single block!) (do-else block!)] {
+    [get-rank c0]
+    [ifelse c0 [== {zero} c0] do-single do-else]
+  }]]]
+
 [def (single [-> [-> block!]])
   [lam [(get-rank get-rank!)]
-  [lam [(c0 reg!) (do-single block!)] {
-    [get-rank c0]
-    [if+2 c0 [== {zero} c0] do-single]
-  }]]]
+  [lam [(c0 reg!) (do-single block!)]
+  [[single-else get-rank] c0 do-single {}]]]]
 
 [def (init) [lam [(nranks-shmem num!) (single-shmem [-> block!])] {
   [single-shmem {a0} [init-allocate {a1}]]
