@@ -4,12 +4,12 @@
 [def (critical-mask [-> [-> [-> block!]]])
   [lam [(n-ranks num!) (get-rank get-rank!)]
   [lam [(mask [lamof [∘ input! output!]] [-> block!]) (increment num!)]
-  [lam [(clobber0 reg!) (do-critical block!)] {
-    [get-rank clobber0]
-    [mask clobber0]
+  [lam [(c0 reg!) (do-critical block!)] {
+    [get-rank c0]
+    [mask c0]
     [repeat n-ranks {
-      [if+2 [== {zero} clobber0] do-critical]
-      addi clobber0 clobber0 increment
+      [if+2 c0 [== {zero} c0] do-critical]
+      addi c0 c0 increment
     }]
 }]]]]
 [def (critical [-> [lamof reg! block!]] [-> [-> block!]])
@@ -17,9 +17,9 @@
     [[critical-mask a b] [lam [(_)] {}] -1]]]
 [def (single [-> [-> block!]])
   [lam [(get-rank get-rank!)]
-  [lam [(clobber0 reg!) (do-single block!)] {
-    [get-rank clobber0]
-    [if+2 [== {zero} clobber0] do-single]
+  [lam [(c0 reg!) (do-single block!)] {
+    [get-rank c0]
+    [if+2 c0 [== {zero} c0] do-single]
   }]]]
 [def (init) [lam [(nranks-shmem num!) (single-shmem [-> block!])] {
   [single-shmem {a0} [init-allocate {a1}]]
