@@ -13,8 +13,8 @@
 
 [def (->) [lam [(result-check)]
   [lam [(l)]
-    [applierify-varargs [lam [(applier)]
-      [result-check [applier l]]]]]]]
+    [applierify-varargs l [lam [(applier)]
+      [result-check [applier]]]]]]]
 [def (assertify) [lam [(? [lam! 1]) (description)] [lam [(checkee)]
   [if [? checkee]
     [lam [] checkee]
@@ -38,8 +38,12 @@
 [def (range!) [hasattr! {range}]]
 [def (println) [lam [(s)] [lam [] [[print s]] [[print {
 }]]]]]
-[def (∘) [lam [(a [lam! 1]) (b)] [applierify-varargs [lam [(applier)]
-  [a [applier b]]]]]]
+[def (divisor!)
+  [lam [(m)]
+  [lam [(d)]
+    [[=!] 0 [% m d]]]]]
+[def (∘) [lam [(a [lam! 1]) (b)] [applierify-varargs b [lam [(applier)]
+  [a [applier]]]]]]
 [def (;;) [lam [(doc)] id]]
 [def (/*) [lam [(ignored)] {}]]
 [def (input!) reg!]
