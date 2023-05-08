@@ -106,6 +106,54 @@
   LOOP:
   [load c0]
   beqz c0 LOOP}]]
+[;; { delay for k cycles. }]
+[def (delay-short [-> block!]) [lam [(k num!)] [repeat k {nop}]]]
+
+[def (delay [-> block!]) [lam [(c0 clobber!) (k num! [>=! 0])]
+  [if [<? k 4]
+    [lam [] [delay-short k]]
+    [lam [] [[unsafe-assert-exact-cycles k] {
+      li c0 [/ [- k 1] 2]
+      DELAY_LOOP:
+      addi c0 c0 -1
+      bnez c0 DELAY_LOOP
+      [delay-short [% [- k 1] 2]]
+    }]]]]]
+
+[;; { execute block if condition is true in time = (2 + cycles of block) }]
+[def (ifelse [-> block!]) [lam [(c0 clobber!) (condition condition!) (do-if block!) (do-else block!)]
+  [def (elsecycles) [cycles? do-else]]
+  [def (do-if)
+    {
+      [id do-if]
+      [if [<? [cycles? do-if] elsecycles]
+        [lam [] [delay c0 [- [- elsecycles [cycles? do-if]] 1]]]
+        [lam [] {}]]
+    }]
+  [def (ifcycles [>=! [- elsecycles 1]]) [cycles? do-if]]
+  [def (assembly block!) {
+    [[condition {ELSE}] false]
+    [id do-if]
+    j DONE
+    ELSE:
+    [id do-else]
+    [delay c0 [+ 1 [- ifcycles elsecycles]]]
+    DONE:
+    }]
+  [;; { overhead = time to branch/not branch + time to jump }]
+  [[unsafe-assert-exact-cycles [+ 2 ifcycles]] assembly]]]
+[def (if+2) [lam [(c0 clobber!) (condition condition!) (instrs block!)] [ifelse c0 condition instrs {}]]]
+[def (best)
+  [lam [(compare [-> condition!])]
+  [lam [(rd output!) (rs1 input!) (rs2 input!)]
+  [ifelse {zero} [compare rs1 rs2] {
+    mv rd rs1
+  } {
+    mv rd rs2
+  }]]]]
+[def (max~ [-> block!]) [best >=]]
+[def (min~ [-> block!]) [best <]]
+
 [def (init-allocate [-> block!]) [lam [(clobber0 clobber!)] {
   li clobber0 4
   sw clobber0 0(gp)
@@ -271,4 +319,118 @@
       bits (nbits) length (length) seeded (seed num!)]
   [lam [(output output!)]
   [rng c0 c1 output nbits length { li c1 seed }]]]]
+[def (iterate [-> block!])
+  [lam [(output) of (iterator [-> iterator!]) (block block!)]
+    [def (iterator) [iterator output]]
+    [def (repeated block!)
+      {
+        ITERATE_LOOP_START:
+        [iterator it-next]
+        [id block]
+        [[[iterator it-has-next] {ITERATE_LOOP_START}] true]
+      }]
+    [def (repeated
+        [unsafe-assert-exact-cycles
+          [+
+            [* [- [iterator it-length] 1] cycles-of-taken-branch]
+            cycles-of-not-taken-branch
+            [*
+              [iterator it-length]
+              [+ [cycles? [iterator it-next]] [cycles? block]]]]
+        ])
+      repeated]
+    {
+      [iterator it-init]
+      [id repeated]
+    }]]
+[def (..-with-rank)
+  [lam [(..-with-rank)]
+  [lam [(stopreg clobber!) (start num!) to (end num! [>=! start]) ranks (n-ranks num!) get-rank (get-rank!)]]
+  [lam [(output)]
+    [def (init)
+      {
+        li stopreg [- end 1]
+        [get-rank output]
+        slli output output [log2 [/ [- end start] ranks]]
+        addi output [- start 1]
+      }]
+    [def (next) { addi output 1 }]
+    [def (length) [- end start]]
+    [def (split)
+      [lam [(n-ranks num!) (get-rank get-rank!)]
+        [[.. ..] stopreg start to end ranks n-ranks get-rank get-rank]]]
+    [def (unroll)
+      [lam [(k) (block)]]
+        [unroll k [lam [(n)]
+          {
+            li output n
+            [id block]
+          }]]]
+    [def (has-next) [!= output stopreg]]
+    [def (length') [/ [- end start] n-ranks]]
+    [iterator-new i init n next l length' o output s split u unroll h has-next]]]]
+[def (..-with-rank) [..-with-rank ..-with-rank]]
+[def (..)
+  [lam [(stopreg) (start) to (end)]
+    [..-with-rank stopreg start to end ranks 1 get-rank [lam [(r)] li r 0]]]]
+[def (cyclify)
+  [lam [(cyclify)]
+  [lam [(counter clobber!) (c1 clobber!)
+      (iterable [-> iterator!]) times (length num!)]
+  [lam [(output)]
+    [def (iterator) [iterable output]]
+    [def (length') [* length [iterator it-length]]]
+    [def (init block!)
+      {
+        li counter length'
+        [iterator it-init]
+      }]
+    [def (next)
+      {
+        addi counter counter -1
+        [ifelse c1 [iterator it-has-next] {
+          [iterator it-next]
+        } {
+          [iterator it-init]
+          [iterator it-next]
+        }]
+      }]
+    [def (split)
+      [lam [(n-ranks num! [divisor! length]) (get-rank get-rank!)]
+        [[[cyclify cyclify] counter clobber iterable times [/ length n-ranks]] output]]]
+    [def (unroll)
+      [lam [(k num! [divisor! [iterator it-length]]) (block block!)]
+        [[iterator it-unroll] k block]]]
+    [def (has-next) [!= zero counter]]
+    [iterator-new i init n next l length' o output s split u unroll h has-next]
+    ]]]]
+[def (cyclify) [cyclify cyclify]]
+[def (iterate2)
+  [lam [(output0) of (iterable0 [-> iterator!]) and (output1) of (iterable1 [-> iterator!])]
+    [def (iterator0) [iterable0 output]]
+    [def (iterator1) [iterable1 output]]
+    [=! [iterator0 it-length] [iterator1 it-length]]
+    [def (repeated block!)
+      {
+        ITERATE_LOOP_START:
+        [iterator0 it-next]
+        [iterator1 it-next]
+        [id block]
+        [[[iterator0 it-has-next] {ITERATE_LOOP_START}] true]
+      }]
+    [def (repeated
+        [unsafe-assert-exact-cycles
+          [+
+            [* [- [iterator0 it-length] 1] cycles-of-taken-branch]
+            cycles-of-not-taken-branch
+            [*
+              [iterator0 it-length]
+              [+ [cycles? [iterator0 it-next]] [cycles? [iterator1 it-next]] [cycles? block]]]]
+        ])
+      repeated]
+    {
+      [iterator0 it-init]
+      [iterator1 it-init]
+      [id repeated]
+    }]]
 [program]]

@@ -2,44 +2,5 @@
 [;; { Control-flow primitives for the case when the number of harts is large enough that all
   instructions, including loads, finish in one thread cycle. }]
 
-[;; { delay for k cycles. }]
-[def (delay-short [-> block!]) [lam [(k num!)] [repeat k {nop}]]]
 
-[def (delay [-> block!]) [lam [(c0 clobber!) (k num! [>=! 0])]
-  [if [<? k 4]
-    [lam [] [delay-short k]]
-    [lam [] [[unsafe-assert-exact-cycles k] {
-      li c0 [/ [- k 1] 2]
-      DELAY_LOOP:
-      addi c0 c0 -1
-      bnez c0 DELAY_LOOP
-      [delay-short [% [- k 1] 2]]
-    }]]]]]
-
-[;; { execute block if condition is true in time = (2 + cycles of block) }]
-[def (ifelse [-> block!]) [lam [(c0 clobber!) (condition condition!) (do-if block!) (do-else block!)]
-  [def (ifcycles) [cycles? do-if]]
-  [def (elsecycles [<=! ifcycles]) [cycles? do-else]]
-  [def (assembly block!) {
-    [[condition {ELSE}] false]
-    [id do-if]
-    j DONE
-    ELSE:
-    [id do-else]
-    [delay c0 [+ 1 [- ifcycles elsecycles]]]
-    DONE:
-    }]
-  [;; { overhead = time to branch/not branch + time to jump }]
-  [[unsafe-assert-exact-cycles [+ 2 ifcycles]] assembly]]]
-[def (if+2) [lam [(c0 clobber!) (condition condition!) (instrs block!)] [ifelse c0 condition instrs {}]]]
-[def (best)
-  [lam [(compare [-> condition!])]
-  [lam [(rd output!) (rs1 input!) (rs2 input!)]
-  [ifelse {zero} [compare rs1 rs2] {
-    mv rd rs1
-  } {
-    mv rd rs2
-  }]]]]
-[def (max~ [-> block!]) [best >=]]
-[def (min~ [-> block!]) [best <]]
 [program]]
