@@ -56,8 +56,8 @@
     (counter reg!)
     (stopreg clobber!)
     (start num!)
-    (stop num! [>! start])
-    (step num! [>! 0])
+    to (stop num! [>! start])
+    by (step num! [>! 0])
     (body block!)]
     [def (step') [* step n-ranks]]
     [def (asm,cycles) [for~ counter stopreg step' body]]

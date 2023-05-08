@@ -60,8 +60,8 @@
     (counter reg!)
     (clobber clobber!)
     (start num!)
-    (stop num! [>! start])
-    (step num! [>! 0])
+    to (stop num! [>! start])
+    by (step num! [>! 0])
     (body block!)]
   [def (stopreg) clobber]
   [def (startup) {
