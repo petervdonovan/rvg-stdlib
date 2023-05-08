@@ -114,6 +114,99 @@
     addi ptr ptr [* -4 nwords]
     add ptr ptr gp
   }]]
+
+[;; { iterator abstract data type }]
+[def (iterator!) [assertify [lam [(x)] [[hasattr {iterator}] x]] {an iterator}]]
+[def (iterator-giver!) [∘ [lamof output!] [-> iterator!]]]
+[def (iterable!) [-> iterator-giver!]]
+[def (iterator-new [-> iterator!])
+  [lam [
+    i (init block!)
+    n (next block!)
+    l (length num!)
+    o (output)
+    s (split [lamof num!] [-> [∘ [lamof num!] [-> iterator!]]])
+    u (unroll [lamof [divisor! length] block!])
+    h (has-next condition!)
+  ]
+    [[addattr {iterator}]
+      [lam [(get)] [get init next length output split unroll has-next]]]]]
+[def (it-init)
+  [lam [(init) (next) (length) (output) (split) (unroll) (has-next)] init]]
+[def (it-next)
+  [lam [(init) (next) (length) (output) (split) (unroll) (has-next)] next]]
+[def (it-length)
+  [lam [(init) (next) (length) (output) (split) (unroll) (has-next)] length]]
+[def (it-output)
+  [lam [(init) (next) (length) (output) (split) (unroll) (has-next)] output]]
+[def (it-split)
+  [lam [(init) (next) (length) (output) (split) (unroll) (has-next)] split]]
+[def (it-unroll)
+  [lam [(init) (next) (length) (output) (split) (unroll) (has-next)] unroll]]
+[def (it-has-next)
+  [lam [(init) (next) (length) (output) (split) (unroll) (has-next)] has-next]]
+
+[def (subarray-new [-> iterable!])
+  [lam [(array input!) of length (length num!) starting (start num!) strided (stride num!)]
+  [lam [(c0 clobber!) (c1 clobber!)]
+  [lam [(output output!)]
+    [def (endreg) c1]
+    [def (currentreg) c0]
+    [def (init)
+      {
+        addi endreg array [* 4 length]
+        addi currentreg array [* 4 start]
+      }]
+    [def (next)
+      {
+        lw output 0(currentreg)
+        addi currentreg currentreg [* 4 stride]
+      }]
+    [def (split)
+      [lam [(k)]
+      [lam [(j)]
+        [subarray-iterator c0 c1 array of length [/ length k] starting j strided [* stride k]]]]]
+    [def (unroll)
+      [lam [(k num!) (block block!)]
+      {
+        [unroll k
+          [lam [(n)]
+          {
+            lw output [* n [* 4 stride]] (currentreg)
+            [id block]
+          }]]
+        addi currentreg currentreg [* 4 [* k stride]]
+      }]]
+    [def (has-next) [!= currentreg endreg]]
+    [iterator-new i init n next l length o output s split u unroll h has-next]]]]]
+[def (array-new [-> iterable!])
+  [lam [(array input!) of length (length num!)]
+    [subarray-new array of length length starting 0 strided 1]]]
+[def (iterate [-> block!])
+  [lam [(output) of (iterator [-> iterator!]) (block block!)]
+    [def (iterator) [iterator output]]
+    [def (repeated block!)
+      {
+        ITERATE_LOOP_START:
+        [iterator it-next]
+        [id block]
+        [[[iterator it-has-next] {ITERATE_LOOP_START}] true]
+      }]
+    [def (repeated
+        [unsafe-assert-exact-cycles
+          [+
+            [* [- [iterator it-length] 1] cycles-of-taken-branch]
+            cycles-of-not-taken-branch
+            [*
+              [iterator it-length]
+              [+ [cycles? [iterator it-next]] [cycles? block]]]]
+        ])
+      repeated]
+    {
+      [iterator it-init]
+      [id repeated]
+    }]]
+
 [def (a0) {a0}] [def (a1) {a1}] [def (a2) {a2}] [def (a3) {a3}] [def (a4) {a4}] [def (a5) {a5}] [def (a6) {a6}] [def (a7) {a7}]
 [def (t0) {t0}] [def (t1) {t1}] [def (t2) {t2}] [def (t3) {t3}] [def (t4) {t4}] [def (t5) {t5}] [def (t6) {t6}]
 [def (s0) {s0}] [def (s1) {s1}] [def (s2) {s2}] [def (s3) {s3}] [def (s4) {s4}] [def (s5) {s5}] [def (s6) {s6}] [def (s7) {s7}] [def (s8) {s8}] [def (s9) {s9}] [def (s10) {s10}] [def (s11) {s11}]
