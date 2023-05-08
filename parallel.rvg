@@ -1,5 +1,4 @@
 [mu [(program)]
-[def (get-rank!) [∘ [lamof reg!] [-> block!]]]
 
 [def (critical [-> [-> block!]])
   [lam [(n-ranks num!) (get-rank get-rank!)]
@@ -72,6 +71,10 @@
       li stopreg stop
       [id loop]
     }]]]
+[def (pariterate [-> [-> block!]])
+  [lam [(n-ranks num!) (get-rank get-rank!)]
+  [lam [(output) of (iterator) (block)]
+    [iterate output of [lam [(output)] [[[iterator output] it-split] n-ranks get-rank]] block]]]]
 
 [def (forkjoin [-> [-> block!]])
   [lam [(n-ranks num!) (get-rank get-rank!)]

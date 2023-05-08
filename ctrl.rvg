@@ -120,6 +120,7 @@
   }]]
 
 [;; { iterator abstract data type }]
+[def (get-rank!) [∘ [lamof reg!] [-> block!]]]
 [def (iterator!) [assertify [lam [(x)] [[hasattr {iterator}] x]] {an iterator}]]
 [def (iterator-giver!) [∘ [lamof output!] [-> iterator!]]]
 [def (iterable!) [-> iterator-giver!]]
@@ -129,7 +130,7 @@
     n (next block!)
     l (length num!)
     o (output)
-    s (split [lamof num!] [-> [∘ [lamof num!] [-> iterator!]]])
+    s (split [lamof num! get-rank!] [-> iterator!])
     u (unroll [lamof [divisor! length] block!])
     h (has-next condition!)
   ]
@@ -151,7 +152,7 @@
   [lam [(init) (next) (length) (output) (split) (unroll) (has-next)] has-next]]
 
 [def (subarray-new [-> iterable!])
-  [lam [(array input!) of length (length num!) starting (start num!) strided (stride num!)]
+  [lam [(array input!) of length (length num!) starting (get-rank get-rank!) strided (stride num!)]
   [lam [(c0 clobber!) (c1 clobber!)]
   [lam [(output output!)]
     [def (endreg) c1]
@@ -159,7 +160,9 @@
     [def (init)
       {
         addi endreg array [* 4 length]
-        addi currentreg array [* 4 start]
+        [get-rank currentreg]
+        slli currentreg currentreg 2
+        add currentreg currentreg array
       }]
     [def (next)
       {
@@ -167,9 +170,8 @@
         addi currentreg currentreg [* 4 stride]
       }]
     [def (split)
-      [lam [(k)]
-      [lam [(j)]
-        [subarray-iterator c0 c1 array of length [/ length k] starting j strided [* stride k]]]]]
+      [lam [(n-ranks) (get-rank)]
+        [subarray-iterator c0 c1 array of length [/ length k] starting get-rank strided [* stride n-ranks]]]]
     [def (unroll)
       [lam [(k num!) (block block!)]
       {
@@ -185,7 +187,7 @@
     [iterator-new i init n next l length o output s split u unroll h has-next]]]]]
 [def (array-new [-> iterable!])
   [lam [(array input!) of length (length num!)]
-    [subarray-new array of length length starting 0 strided 1]]]
+    [subarray-new array of length length starting [lam [(r)] { mv r zero }] strided 1]]]
 [def (iterate [-> block!])
   [lam [(output) of (iterator [-> iterator!]) (block block!)]
     [def (iterator) [iterator output]]
@@ -210,7 +212,8 @@
       [iterator it-init]
       [id repeated]
     }]]
-[def (rng [-> iterator!])
+[def (rng)
+  [lam [(rng)]
   [lam [
       (counter clobber!)
       (state input!)
@@ -218,11 +221,6 @@
       (nbits num!)
       (length num!)
       (init block!)]
-    [def (init block!)
-      {
-        [id init]
-        li counter [id length]
-      }]
     [def (shuffle)
       {
         slli output state 13
@@ -233,21 +231,29 @@
         xor state state output
         andi output state 0b[repeattext nbits {1}]
       }]
+    [def (init block!)
+      {
+        [id init]
+        [/* { shuffle a few times in case the initial seed was not a complicated enough state. the number of random bits grows exponentially with base 3ish as you shuffle so a few times should suffice for 32 bits }]
+        [repeat 3 shuffle]
+        li counter [id length]
+      }]
     [def (next)
       {
-        [id output-next]
+        [id shuffle]
         addi counter counter -1
       }]
     [;; { note: this split function does not guarantee that the multiset of outputs will be the same as if it was not split }]
     [def (split)
-      [lam [(nparts num!)]
-      [lam [(index num!)]
-        [intstream
-          counter state output nbits [/ length nparts]
+      [lam [(n-ranks num!) (get-rank get-rank!)]
+        [[rng rng]
+          counter state output nbits [/ length n-ranks]
           {
-            xori state state index
+            [get-rank output]
+            addi output output 1
+            xor state state output
             [id shuffle]
-          }]]]]
+          }]]]
     [def (unroll)
       [lam [(k num!) (block block!)]
         {
@@ -258,7 +264,8 @@
           addi counter counter [- 0 k]
         }]]
     [def (has-next) [!= zero counter]]
-    [iterator-new i init n next l length o output s split u unroll h has-next]]]
+    [iterator-new i init n next l length o output s split u unroll h has-next]]]]
+[def (rng [-> iterator!]) [rng rng]]
 [def (rng-seeded [-> [-> iterator!]])
   [lam [(c0 clobber!) (c1 clobber!)
       bits (nbits) length (length) seeded (seed num!)]
