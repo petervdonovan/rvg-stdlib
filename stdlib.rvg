@@ -52,4 +52,5 @@
 [def (unrolltext) [lam [(n num!) (body [lamof num!])]
   [[[fold-range 1 0 n] {}]
   [lam [(acc) (i)] {[id acc][body i]}]]]]
+[def (repeattext) [lam [(n) (text)] [unrolltext n [lam [(_)] text]]]]
 [program]]

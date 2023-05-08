@@ -1,4 +1,8 @@
 [mu [(program)]
+[def (a0) {a0}] [def (a1) {a1}] [def (a2) {a2}] [def (a3) {a3}] [def (a4) {a4}] [def (a5) {a5}] [def (a6) {a6}] [def (a7) {a7}]
+[def (t0) {t0}] [def (t1) {t1}] [def (t2) {t2}] [def (t3) {t3}] [def (t4) {t4}] [def (t5) {t5}] [def (t6) {t6}]
+[def (s0) {s0}] [def (s1) {s1}] [def (s2) {s2}] [def (s3) {s3}] [def (s4) {s4}] [def (s5) {s5}] [def (s6) {s6}] [def (s7) {s7}] [def (s8) {s8}] [def (s9) {s9}] [def (s10) {s10}] [def (s11) {s11}]
+[def (zero) {zero}] [def (ra) {ra}] [def (sp) {sp}] [def (gp) {gp}] [def (tp) {tp}]
 [def (condition!) [assertify [lam [(x)] [[hasattr {condition}] x]] {a condition}]]
 [def (make-condition)
   [lam [(true-branch frag!) (false-branch frag!)]
@@ -206,9 +210,58 @@
       [iterator it-init]
       [id repeated]
     }]]
-
-[def (a0) {a0}] [def (a1) {a1}] [def (a2) {a2}] [def (a3) {a3}] [def (a4) {a4}] [def (a5) {a5}] [def (a6) {a6}] [def (a7) {a7}]
-[def (t0) {t0}] [def (t1) {t1}] [def (t2) {t2}] [def (t3) {t3}] [def (t4) {t4}] [def (t5) {t5}] [def (t6) {t6}]
-[def (s0) {s0}] [def (s1) {s1}] [def (s2) {s2}] [def (s3) {s3}] [def (s4) {s4}] [def (s5) {s5}] [def (s6) {s6}] [def (s7) {s7}] [def (s8) {s8}] [def (s9) {s9}] [def (s10) {s10}] [def (s11) {s11}]
-[def (zero) {zero}] [def (ra) {ra}] [def (sp) {sp}] [def (gp) {gp}] [def (tp) {tp}]
+[def (rng [-> iterator!])
+  [lam [
+      (counter clobber!)
+      (state input!)
+      (output output!)
+      (nbits num!)
+      (length num!)
+      (init block!)]
+    [def (init block!)
+      {
+        [id init]
+        li counter [id length]
+      }]
+    [def (shuffle)
+      {
+        slli output state 13
+        xor state state output
+        srai output state 17
+        xor state state output
+        slli output state 5
+        xor state state output
+        andi output state 0b[repeattext nbits {1}]
+      }]
+    [def (next)
+      {
+        [id output-next]
+        addi counter counter -1
+      }]
+    [;; { note: this split function does not guarantee that the multiset of outputs will be the same as if it was not split }]
+    [def (split)
+      [lam [(nparts num!)]
+      [lam [(index num!)]
+        [intstream
+          counter state output nbits [/ length nparts]
+          {
+            xori state state index
+            [id shuffle]
+          }]]]]
+    [def (unroll)
+      [lam [(k num!) (block block!)]
+        {
+          [unroll k [lam [(n)]
+            {
+              output-next
+            }]]
+          addi counter counter [- 0 k]
+        }]]
+    [def (has-next) [!= zero counter]]
+    [iterator-new i init n next l length o output s split u unroll h has-next]]]
+[def (rng-seeded [-> [-> iterator!]])
+  [lam [(c0 clobber!) (c1 clobber!)
+      bits (nbits) length (length) seeded (seed num!)]
+  [lam [(output output!)]
+  [rng c0 c1 output nbits length { li c1 seed }]]]]
 [program]]
