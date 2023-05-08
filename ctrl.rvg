@@ -345,34 +345,34 @@
     }]]
 [def (..-with-rank)
   [lam [(..-with-rank)]
-  [lam [(stopreg clobber!) (start num!) to (end num! [>=! start]) ranks (n-ranks num!) get-rank (get-rank!)]]
+  [lam [(stopreg clobber!) (start num!) to (end num! [>=! start]) ranks (n-ranks num!) get-rank (get-rank get-rank!)]
   [lam [(output)]
     [def (init)
       {
         li stopreg [- end 1]
         [get-rank output]
-        slli output output [log2 [/ [- end start] ranks]]
-        addi output [- start 1]
+        slli output output [log2 [/ [- end start] n-ranks]]
+        addi output output [- start 1]
       }]
-    [def (next) { addi output 1 }]
+    [def (next) { addi output output 1 }]
     [def (length) [- end start]]
     [def (split)
       [lam [(n-ranks num!) (get-rank get-rank!)]
-        [[.. ..] stopreg start to end ranks n-ranks get-rank get-rank]]]
+        [[[..-with-rank ..-with-rank] stopreg start to end ranks n-ranks get-rank get-rank] output]]]
     [def (unroll)
-      [lam [(k) (block)]]
+      [lam [(k) (block)]
         [unroll k [lam [(n)]
           {
             li output n
             [id block]
-          }]]]
+          }]]]]
     [def (has-next) [!= output stopreg]]
     [def (length') [/ [- end start] n-ranks]]
-    [iterator-new i init n next l length' o output s split u unroll h has-next]]]]
+    [iterator-new i init n next l length' o output s split u unroll h has-next]]]]]
 [def (..-with-rank) [..-with-rank ..-with-rank]]
 [def (..)
   [lam [(stopreg) (start) to (end)]
-    [..-with-rank stopreg start to end ranks 1 get-rank [lam [(r)] li r 0]]]]
+    [..-with-rank stopreg start to end ranks 1 get-rank [lam [(r)] { li r 0 }]]]]
 [def (cyclify)
   [lam [(cyclify)]
   [lam [(counter clobber!) (c1 clobber!)
@@ -396,8 +396,9 @@
         }]
       }]
     [def (split)
-      [lam [(n-ranks num! [divisor! length]) (get-rank get-rank!)]
-        [[[cyclify cyclify] counter clobber iterable times [/ length n-ranks]] output]]]
+      [lam [(n-ranks num!) (get-rank get-rank!)]
+        [def (splitted) [[iterator it-split] n-ranks get-rank]]
+        [[[cyclify cyclify] counter c1 [lam [(_)] splitted] times length] output]]]
     [def (unroll)
       [lam [(k num! [divisor! [iterator it-length]]) (block block!)]
         [[iterator it-unroll] k block]]]
