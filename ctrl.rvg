@@ -351,7 +351,7 @@
     [def (init)
       {
         [get-rank output]
-        slli output output [log2 length']
+        [if [>? n-ranks 1] [lam [] {slli output output [log2 length']}] [lam [] {}]]
         addi output output [- start 1]
         addi stopreg output length'
       }]
