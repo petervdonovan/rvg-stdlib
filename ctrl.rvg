@@ -346,16 +346,16 @@
 [def (..-with-rank)
   [lam [(..-with-rank)]
   [lam [(stopreg clobber!) (start num!) to (end num! [>=! start]) ranks (n-ranks num!) get-rank (get-rank get-rank!)]
+  [def (length') [/ [- end start] n-ranks]]
   [lam [(output)]
     [def (init)
       {
-        li stopreg [- end 1]
         [get-rank output]
-        slli output output [log2 [/ [- end start] n-ranks]]
+        slli output output [log2 length']
         addi output output [- start 1]
+        addi stopreg output length'
       }]
     [def (next) { addi output output 1 }]
-    [def (length) [- end start]]
     [def (split)
       [lam [(n-ranks num!) (get-rank get-rank!)]
         [[[..-with-rank ..-with-rank] stopreg start to end ranks n-ranks get-rank get-rank] output]]]
@@ -367,7 +367,6 @@
             [id block]
           }]]]]
     [def (has-next) [!= output stopreg]]
-    [def (length') [/ [- end start] n-ranks]]
     [iterator-new i init n next l length' o output s split u unroll h has-next]]]]]
 [def (..-with-rank) [..-with-rank ..-with-rank]]
 [def (..)
