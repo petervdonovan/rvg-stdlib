@@ -179,7 +179,7 @@
     l (length num!)
     o (output)
     s (split [lamof num! get-rank!] [-> iterator!])
-    u (unroll [lamof [divisor! length] block!])
+    u (unroll [lamof [divisor! length] [-> block!]])
     (unroll-gcd num!)
     h (has-next condition!)
   ]
@@ -224,13 +224,13 @@
       [lam [(n-ranks) (get-rank)]
         [subarray-iterator c0 c1 array of length [/ length k] starting get-rank strided [* stride n-ranks]]]]
     [def (unroll)
-      [lam [(k num!) (block block!)]
+      [lam [(k num!) (block [-> block!])]
       {
         [unroll k
           [lam [(n)]
           {
             lw output [* n [* 4 stride]] (currentreg)
-            [id block]
+            [block output]
           }]]
         addi currentreg currentreg [* 4 [* k stride]]
       }]]
@@ -241,23 +241,27 @@
     [subarray-new array of length length starting [lam [(r)] { mv r zero }] strided 1]]]
 
 [def (iterate [-> block!])
-  [lam [(output) of (iterator [-> iterator!]) (block block!)]
+  [lam [(output) of (iterator [-> iterator!]) (block [blam! output])]
     [def (iterator) [iterator output]]
+    [;; { TODO }]
+    [def (unroll-k) 1]
+    [def (core block!)
+      [[iterator it-unroll] unroll-k block]]
     [def (repeated block!)
       {
         ITERATE_LOOP_START:
-        [iterator it-next]
-        [id block]
+        [id core]
         [[[iterator it-has-next] {ITERATE_LOOP_START}] true]
       }]
+    [def (n-periods) [/ [iterator it-length] unroll-k]]
     [def (repeated
         [unsafe-assert-exact-cycles
           [+
-            [* [- [iterator it-length] 1] cycles-of-taken-branch]
+            [* [- n-periods 1] cycles-of-taken-branch]
             cycles-of-not-taken-branch
             [*
-              [iterator it-length]
-              [+ [cycles? [iterator it-next]] [cycles? block]]]]
+              n-periods
+              [+ [cycles? core]]]]
         ])
       repeated]
     {
@@ -309,9 +313,9 @@
     [def (unroll)
       [lam [(k num!) (block block!)]
         {
-          [unroll k [lam [(n)]
+          [unroll k [lam [(_)]
             {
-              output-next
+              [id shuffle]
             }]]
           addi counter counter [- 0 k]
         }]]
@@ -346,7 +350,7 @@
         [unroll k [lam [(n)]
           {
             li output n
-            [id block]
+            [block output]
           }]]]]
     [def (has-next) [!= output stopreg]]
     [iterator-new i init n next l length' o output s split u unroll 1 h has-next]]]]]
@@ -381,38 +385,10 @@
         [def (splitted) [[iterator it-split] n-ranks get-rank]]
         [[[cyclify cyclify] counter c1 [lam [(_)] splitted] times length] output]]]
     [def (unroll)
-      [lam [(k num! [divisor! [iterator it-length]]) (block block!)]
+      [lam [(k num! [divisor! [iterator it-length]]) (block [-> block!])]
         [[iterator it-unroll] k block]]]
     [def (has-next) [!= zero counter]]
     [iterator-new i init n next l length' o output s split u unroll [iterator it-length] h has-next]
     ]]]]
 [def (cyclify) [cyclify cyclify]]
-[def (iterate2)
-  [lam [(output0) of (iterable0 [-> iterator!]) and (output1) of (iterable1 [-> iterator!])]
-    [def (iterator0) [iterable0 output]]
-    [def (iterator1) [iterable1 output]]
-    [=! [iterator0 it-length] [iterator1 it-length]]
-    [def (repeated block!)
-      {
-        ITERATE_LOOP_START:
-        [iterator0 it-next]
-        [iterator1 it-next]
-        [id block]
-        [[[iterator0 it-has-next] {ITERATE_LOOP_START}] true]
-      }]
-    [def (repeated
-        [unsafe-assert-exact-cycles
-          [+
-            [* [- [iterator0 it-length] 1] cycles-of-taken-branch]
-            cycles-of-not-taken-branch
-            [*
-              [iterator0 it-length]
-              [+ [cycles? [iterator0 it-next]] [cycles? [iterator1 it-next]] [cycles? block]]]]
-        ])
-      repeated]
-    {
-      [iterator0 it-init]
-      [iterator1 it-init]
-      [id repeated]
-    }]]
 [program]]
