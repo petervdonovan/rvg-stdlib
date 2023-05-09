@@ -15,6 +15,9 @@
   [lam [(l)]
     [applierify-varargs l [lam [(applier)]
       [result-check [applier]]]]]]]
+
+[def (blam! [-> [-> [-> block!]]]) [lam [(name)] [lam [(block)] [lamify block name]]]]
+
 [def (assertify) [lam [(? [lam! 1]) (description)] [lam [(checkee)]
   [if [? checkee]
     [lam [] checkee]
