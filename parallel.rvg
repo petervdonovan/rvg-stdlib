@@ -75,6 +75,12 @@
   [lam [(n-ranks num!) (get-rank get-rank!)]
   [lam [(output) of (iterator) (block)]
     [iterate output of [lam [(output)] [[[iterator output] it-split] n-ranks get-rank]] block]]]]
+[def (pariterate-at-rate [-> [-> block!]])
+  [lam [(n-ranks num!) (get-rank get-rank!)]
+  [lam [(output) of (iterator) doing (iterations num!) per (period num!) cycles (block)]
+    [iterate-at-rate output of [lam [(output)] [[[iterator output] it-split] n-ranks get-rank]]
+        doing iterations per period cycles
+        block]]]]
 
 [def (forkjoin [-> [-> block!]])
   [lam [(n-ranks num!) (get-rank get-rank!)]
