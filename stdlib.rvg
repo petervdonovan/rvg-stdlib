@@ -49,6 +49,11 @@
   [lam [(d)]
     [[=! 0] [% m d]]
     d]]]
+[def (multiple!)
+  [lam [(d)]
+  [lam [(m)]
+    [[=! 0] [% m d]]
+    m]]]
 [def (∘) [lam [(a [lam! 1]) (b)] [applierify-varargs b [lam [(applier)]
   [a [applier]]]]]]
 [def (;;) [lam [(doc)] id]]
