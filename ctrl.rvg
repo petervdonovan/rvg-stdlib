@@ -178,7 +178,7 @@
     l (length num!)
     o (output)
     s (split [lamof num! get-rank!] [-> iterator!])
-    u (unroll [lamof [-> block!]] [-> [-> block!]])
+    u (unroll [lamof [-> block!]] [-> [∘ [lamof num!] [-> block!]]])
     (unroll-gcd num!)
     p (post-unroll [lamof [divisor! length]] [-> block!])
     h (has-next condition!)
@@ -241,6 +241,8 @@
     [def (iterator) [iterator output]]
     [;; { TODO: compute this intelligently based on optimization level? }]
     [def (unroll-k num!) [iterator it-unroll-gcd]]
+    [[println [unroll unroll-k
+          [[iterator it-unroll] block]]]]
     [def (core block!)
       {
         [unroll unroll-k
@@ -351,9 +353,7 @@
             }]]]
     [def (post-unroll)
       [lam [(k)]
-        {
-          addi counter counter [- 0 k]
-        }]]
+        { }]]
     [def (has-next) [!= output stopreg]]
     [iterator-new i init l length' o output s split u unroll 1 p post-unroll h has-next]]]]]
 [def (..-with-rank) [..-with-rank ..-with-rank]]
@@ -392,4 +392,37 @@
     [iterator-new i init l length' o output s split u unroll [iterator it-length] p post-unroll h has-next]
     ]]]]
 [def (cyclify) [cyclify cyclify]]
+[def (zip)
+  [lam [(zip)]
+  [lam [(out0) of (it0 [-> iterator!]) and (out1) of (it1 [-> iterator!])]
+  [lam [(output-name)]
+    [def (it0) [it0 out0]]
+    [def (it1) [it1 out1]]
+    [def (init) {
+      [it0 it-init]
+      [it1 it-init]
+    }]
+    [def (split)
+      [lam [(n-ranks num!) (get-rank get-rank!)]
+      [[zip zip] [[it0 it-split] n-ranks get-rank] [[it1 it-split] n-ranks get-rank]]]]
+    [def (unroll)
+      [lam [(block [-> block!])]
+      [lam [(n num!)]
+        [[[it0 it-unroll]
+          [lam [(output0)]
+            [[[it1 it-unroll]
+              [lam [(output1)]
+                [block [pair output0 output1]]]] n]]] n]]]]
+    [def (post-unroll)
+      [lam [(k num!)]
+        {
+          [[it0 it-post-unroll] k]
+          [[it1 it-post-unroll] k]
+        }]]
+    [def (unroll-gcd)
+      [LCM [it0 it-unroll-gcd] [it1 it-unroll-gcd]]]
+    [def (length) [it0 it-length]]
+    [def (has-next) [it0 it-has-next]]
+    [iterator-new i init l length o output-name s split u unroll unroll-gcd p post-unroll h has-next]]]]]
+[def (zip) [zip zip]]
 [program]]
