@@ -175,7 +175,6 @@
 [def (iterator-new [-> iterator!])
   [lam [
     i (init block!)
-    n (next block!)
     l (length num!)
     o (output)
     s (split [lamof num! get-rank!] [-> iterator!])
@@ -184,23 +183,21 @@
     h (has-next condition!)
   ]
     [[addattr {iterator}]
-      [lam [(get)] [get init next length output split unroll unroll-gcd has-next]]]]]
+      [lam [(get)] [get init length output split unroll unroll-gcd has-next]]]]]
 [def (it-init)
-  [lam [(init) (next) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] init]]
-[def (it-next)
-  [lam [(init) (next) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] next]]
+  [lam [(init) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] init]]
 [def (it-length)
-  [lam [(init) (next) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] length]]
+  [lam [(init) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] length]]
 [def (it-output)
-  [lam [(init) (next) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] output]]
+  [lam [(init) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] output]]
 [def (it-split)
-  [lam [(init) (next) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] split]]
+  [lam [(init) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] split]]
 [def (it-unroll)
-  [lam [(init) (next) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] unroll]]
+  [lam [(init) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] unroll]]
 [def (it-unroll-gcd)
-  [lam [(init) (next) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] unroll-gcd]]
+  [lam [(init) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] unroll-gcd]]
 [def (it-has-next)
-  [lam [(init) (next) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] has-next]]
+  [lam [(init) (length) (output) (split) (unroll) (unroll-gcd) (has-next)] has-next]]
 
 [def (subarray-new [-> iterable!])
   [lam [(array input!) of length (length num!) starting (get-rank get-rank!) strided (stride num!)]
@@ -214,11 +211,6 @@
         [get-rank currentreg]
         slli currentreg currentreg 2
         add currentreg currentreg array
-      }]
-    [def (next)
-      {
-        lw output 0(currentreg)
-        addi currentreg currentreg [* 4 stride]
       }]
     [def (split)
       [lam [(n-ranks) (get-rank)]
@@ -235,7 +227,7 @@
         addi currentreg currentreg [* 4 [* k stride]]
       }]]
     [def (has-next) [!= currentreg endreg]]
-    [iterator-new i init n next l length o output s split u unroll 1 h has-next]]]]]
+    [iterator-new i init l length o output s split u unroll 1 h has-next]]]]]
 [def (array-new [-> iterable!])
   [lam [(array input!) of length (length num!)]
     [subarray-new array of length length starting [lam [(r)] { mv r zero }] strided 1]]]
@@ -294,11 +286,6 @@
         [repeat 3 shuffle]
         li counter [id length]
       }]
-    [def (next)
-      {
-        [id shuffle]
-        addi counter counter -1
-      }]
     [;; { note: this split function does not guarantee that the multiset of outputs will be the same as if it was not split }]
     [def (split)
       [lam [(n-ranks num!) (get-rank get-rank!)]
@@ -321,7 +308,7 @@
           addi counter counter [- 0 k]
         }]]
     [def (has-next) [!= zero counter]]
-    [iterator-new i init n next l length o output s split u unroll 1 h has-next]]]]
+    [iterator-new i init l length o output s split u unroll 1 h has-next]]]]
 
 [def (rng [-> iterator!]) [rng rng]]
 [def (rng-seeded [-> [-> iterator!]])
@@ -342,7 +329,6 @@
         addi output output [- start 1]
         addi stopreg output length'
       }]
-    [def (next) { addi output output 1 }]
     [def (split)
       [lam [(n-ranks num!) (get-rank get-rank!)]
         [[[..-with-rank ..-with-rank] stopreg start to end ranks n-ranks get-rank get-rank] output]]]
@@ -356,7 +342,7 @@
             }]]
         }]]
     [def (has-next) [!= output stopreg]]
-    [iterator-new i init n next l length' o output s split u unroll 1 h has-next]]]]]
+    [iterator-new i init l length' o output s split u unroll 1 h has-next]]]]]
 [def (..-with-rank) [..-with-rank ..-with-rank]]
 [def (..)
   [lam [(stopreg) (start) to (end)]
@@ -373,16 +359,6 @@
         li counter length'
         [iterator it-init]
       }]
-    [def (next)
-      {
-        addi counter counter -1
-        [ifelse c1 [iterator it-has-next] {
-          [iterator it-next]
-        } {
-          [iterator it-init]
-          [iterator it-next]
-        }]
-      }]
     [def (split)
       [lam [(n-ranks num!) (get-rank get-rank!)]
         [def (splitted) [[iterator it-split] n-ranks get-rank]]
@@ -398,7 +374,7 @@
         }]
         }]]
     [def (has-next) [!= zero counter]]
-    [iterator-new i init n next l length' o output s split u unroll [iterator it-length] h has-next]
+    [iterator-new i init l length' o output s split u unroll [iterator it-length] h has-next]
     ]]]]
 [def (cyclify) [cyclify cyclify]]
 [program]]
