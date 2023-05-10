@@ -441,7 +441,9 @@
     }]
     [def (split)
       [lam [(n-ranks num!) (get-rank get-rank!)]
-      [[zip zip] [[it0 it-split] n-ranks get-rank] [[it1 it-split] n-ranks get-rank]]]]
+      [[[zip zip] out0 of [lam [(_)] [[it0 it-split] n-ranks get-rank]]
+        and out1 of [lam [(_)] [[it1 it-split] n-ranks get-rank]]]
+        output-name]]]
     [def (unroll)
       [lam [(block [-> block!])]
       [lam [(n num!)]
