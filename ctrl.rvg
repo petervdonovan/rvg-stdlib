@@ -299,12 +299,9 @@
     [def (n-periods) [/ [iterator it-length] unroll-k]]
     [def (repeated
         [unsafe-assert-exact-cycles
-          [+
-            [* [- n-periods 1] cycles-of-taken-branch]
-            cycles-of-not-taken-branch
             [*
               n-periods
-              [+ [cycles? core]]]]
+              period]
         ])
       repeated]
     {
