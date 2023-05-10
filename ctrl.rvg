@@ -18,6 +18,12 @@
 [def (>=) [make-condition {bgeu} {blt}]]
 [def (==) [make-condition {beq} {bne}]]
 [def (!=) [make-condition {bne} {beq}]]
+[def (true-condition) [[addattr {condition}]
+  [lam [(label frag!)]
+    [pair {jal label} {}]]]]
+[def (false-condition) [[addattr {condition}]
+  [lam [(label frag!)]
+    [pair {} {jal label}]]]]
 [def (+acc [-> block!]) [lam [(acc input! output!) (other input!)] {add acc acc other}]]
 [def (-acc [-> block!]) [lam [(acc input! output!) (other input!)] {sub acc acc other}]]
 [def (branch~) [lam [(condition condition!) (asm block!)] {
@@ -241,8 +247,6 @@
     [def (iterator) [iterator output]]
     [;; { TODO: compute this intelligently based on optimization level? }]
     [def (unroll-k num!) [iterator it-unroll-gcd]]
-    [[println [unroll unroll-k
-          [[iterator it-unroll] block]]]]
     [def (core block!)
       {
         [unroll unroll-k
@@ -270,7 +274,7 @@
       [iterator it-init]
       [id repeated]
     }]]
-[def (rng)
+[def (rng rec!)
   [lam [(rng)]
   [lam [
       (counter clobber!)
@@ -322,14 +326,13 @@
     [def (has-next) [!= zero counter]]
     [iterator-new i init l length o output s split u unroll 1 p post-unroll h has-next]]]]
 
-[def (rng [-> iterator!]) [rng rng]]
 [def (rng-seeded [-> [-> iterator!]])
   [lam [(c0 clobber!) (c1 clobber!)
       bits (nbits) length (length) seeded (seed num!)]
   [lam [(output output!)]
   [rng c0 c1 output nbits length { li c1 seed }]]]]
 
-[def (..-with-rank)
+[def (..-with-rank rec!)
   [lam [(..-with-rank)]
   [lam [(stopreg clobber!) (start num!) to (end num! [>=! start]) ranks (n-ranks num!) get-rank (get-rank get-rank!)]
   [def (length') [/ [- end start] n-ranks]]
@@ -356,11 +359,11 @@
         { }]]
     [def (has-next) [!= output stopreg]]
     [iterator-new i init l length' o output s split u unroll 1 p post-unroll h has-next]]]]]
-[def (..-with-rank) [..-with-rank ..-with-rank]]
+
 [def (..)
   [lam [(stopreg) (start) to (end)]
     [..-with-rank stopreg start to end ranks 1 get-rank [lam [(r)] { li r 0 }]]]]
-[def (cyclify)
+[def (cyclify rec!)
   [lam [(cyclify)]
   [lam [(counter clobber!) (c1 clobber!)
       (iterable [-> iterator!]) times (length num!)]
@@ -391,8 +394,8 @@
     [def (has-next) [!= zero counter]]
     [iterator-new i init l length' o output s split u unroll [iterator it-length] p post-unroll h has-next]
     ]]]]
-[def (cyclify) [cyclify cyclify]]
-[def (zip)
+
+[def (zip rec!)
   [lam [(zip)]
   [lam [(out0) of (it0 [-> iterator!]) and (out1) of (it1 [-> iterator!])]
   [lam [(output-name)]
@@ -424,5 +427,37 @@
     [def (length) [it0 it-length]]
     [def (has-next) [it0 it-has-next]]
     [iterator-new i init l length o output-name s split u unroll unroll-gcd p post-unroll h has-next]]]]]
-[def (zip) [zip zip]]
+[def (memregion-with-rank rec!)
+  [lam [(memregion-with-rank)]
+  [lam [(c0 clobber!) (c1 clobber!) (base-address num!) words (start num!) to (end num! [>! start])
+      ranks (n-ranks num!) (get-rank get-rank!)]
+  [def (my-length) [/ [- end start] n-ranks]]
+  [lam [(output-name)]
+    [def (init)
+      {
+        li c1 [+ base-address [* 4 start]]
+        [if [>? 1 n-ranks]
+          [lam [] {
+            [get-rank c0]
+            slli c0 c0 [log2 [* 4 my-length]]
+            add c0 c0 c1
+          }] [lam [] {
+            add c0 zero c1
+          }]]
+      }]
+    [def (split)
+      [lam [(n-ranks num!) (get-rank get-rank!)]
+        [[memregion-with-rank memregion-with-rank] c0 c1 base-address words start to end ranks n-ranks get-rank]]]
+    [def (unroll)
+      [lam [(block)]
+      [lam [(n)]
+        [block { [* 4 n] (c0) }]]]]
+    [def (post-unroll) [lam [(k)] {}]]
+    [def (has-next) false-condition]
+    [def (unroll-gcd) [- end start]]
+    [iterator-new i init l my-length o output-name s split u unroll unroll-gcd p post-unroll h has-next]
+    ]]]]
+[def (memregion)
+  [lam [(c0) (c1) (base-address) words (start) to (end)]
+    [memregion-with-rank c0 c1 base-address words start to end ranks 1 [lam [(r)] { li r 0 }]]]]
 [program]]
