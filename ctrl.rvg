@@ -244,7 +244,7 @@
   [lam [(output) of (iterator [-> iterator!]) (block [blam! output])]
     [def (iterator) [iterator output]]
     [;; { TODO }]
-    [def (unroll-k) 1]
+    [def (unroll-k) [iterator it-unroll-gcd]]
     [def (core block!)
       [[iterator it-unroll] unroll-k block]]
     [def (repeated block!)
@@ -311,11 +311,12 @@
             [id shuffle]
           }]]]
     [def (unroll)
-      [lam [(k num!) (block block!)]
+      [lam [(k num!) (block [-> block!])]
         {
           [unroll k [lam [(_)]
             {
               [id shuffle]
+              [block output]
             }]]
           addi counter counter [- 0 k]
         }]]
@@ -347,11 +348,13 @@
         [[[..-with-rank ..-with-rank] stopreg start to end ranks n-ranks get-rank get-rank] output]]]
     [def (unroll)
       [lam [(k) (block)]
-        [unroll k [lam [(n)]
-          {
-            li output n
-            [block output]
-          }]]]]
+        {
+          [unroll k [lam [(n)]
+            {
+              addi output output 1
+              [block output]
+            }]]
+        }]]
     [def (has-next) [!= output stopreg]]
     [iterator-new i init n next l length' o output s split u unroll 1 h has-next]]]]]
 [def (..-with-rank) [..-with-rank ..-with-rank]]
@@ -386,7 +389,14 @@
         [[[cyclify cyclify] counter c1 [lam [(_)] splitted] times length] output]]]
     [def (unroll)
       [lam [(k num! [divisor! [iterator it-length]]) (block [-> block!])]
-        [[iterator it-unroll] k block]]]
+        {
+          [[iterator it-unroll] k block]
+          addi counter counter [- 0 k]
+        [ifelse c1 [iterator it-has-next] {
+        } {
+          [iterator it-init]
+        }]
+        }]]
     [def (has-next) [!= zero counter]]
     [iterator-new i init n next l length' o output s split u unroll [iterator it-length] h has-next]
     ]]]]
