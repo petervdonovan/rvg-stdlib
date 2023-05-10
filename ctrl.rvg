@@ -20,10 +20,10 @@
 [def (!=) [make-condition {bne} {beq}]]
 [def (true-condition) [[addattr {condition}]
   [lam [(label frag!)]
-    [pair {jal label} {}]]]]
+    [pair {j label} {}]]]]
 [def (false-condition) [[addattr {condition}]
   [lam [(label frag!)]
-    [pair {} {jal label}]]]]
+    [pair {} {j label}]]]]
 [def (+acc [-> block!]) [lam [(acc input! output!) (other input!)] {add acc acc other}]]
 [def (-acc [-> block!]) [lam [(acc input! output!) (other input!)] {sub acc acc other}]]
 [def (branch~) [lam [(condition condition!) (asm block!)] {
@@ -113,7 +113,7 @@
   [load c0]
   beqz c0 LOOP}]]
 [;; { delay for k cycles. }]
-[def (delay-short [-> block!]) [lam [(k num!)] [repeat k {nop}]]]
+[def (delay-short [-> block!]) [lam [(k [<! 100])] [repeat k {nop}]]]
 
 [def (delay [-> block!]) [lam [(c0 clobber!) (k num! [>=! 0])]
   [if [<? k 4]
@@ -257,6 +257,43 @@
       {
         ITERATE_LOOP_START:
         [id core]
+        [[[iterator it-has-next] {ITERATE_LOOP_START}] true]
+      }]
+    [def (n-periods) [/ [iterator it-length] unroll-k]]
+    [def (repeated
+        [unsafe-assert-exact-cycles
+          [+
+            [* [- n-periods 1] cycles-of-taken-branch]
+            cycles-of-not-taken-branch
+            [*
+              n-periods
+              [+ [cycles? core]]]]
+        ])
+      repeated]
+    {
+      [iterator it-init]
+      [id repeated]
+    }]]
+
+[def (iterate-at-rate [-> block!])
+  [lam [(output) of (iterator [-> iterator!])
+      doing (iterations num!) per (period num!) cycles
+      (block [blam! output])]
+    [def (unroll-k) iterations]
+    [def (iterator) [iterator output]]
+    [[divisor! unroll-k] [iterator it-unroll-gcd]]
+    [def (core block!)
+      {
+        [unroll unroll-k
+          [[iterator it-unroll] block]]
+        [[iterator it-post-unroll] unroll-k]
+      }]
+    [def (delay-cycles [>=! 0]) [- period [cycles? core] cycles-of-taken-branch]]
+    [def (repeated block!)
+      {
+        ITERATE_LOOP_START:
+        [id core]
+        [delay-short delay-cycles]
         [[[iterator it-has-next] {ITERATE_LOOP_START}] true]
       }]
     [def (n-periods) [/ [iterator it-length] unroll-k]]
