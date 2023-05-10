@@ -465,17 +465,18 @@
     [iterator-new i init l length o output-name s split u unroll unroll-gcd p post-unroll h has-next]]]]]
 [def (memregion-with-rank rec!)
   [lam [(memregion-with-rank)]
-  [lam [(c0 clobber!) (c1 clobber!) (base-address num!) words (start num!) to (end num! [>! start])
+  [lam [(c0 clobber!) (c1 clobber!)
+      (base-address num!) words (start num!) to (end num! [>! start]) by (stride [>=! 0])
       ranks (n-ranks num! [divisor! [- end start]]) (get-rank get-rank!)]
   [def (my-length) [/ [- end start] n-ranks]]
   [lam [(output-name)]
     [def (init)
       {
-        li c1 [+ base-address [* 4 start]]
+        li c1 [+ base-address [* 4 start stride]]
         [if [>? n-ranks 1]
           [lam [] {
             [get-rank c0]
-            slli c0 c0 [log2 [* 4 my-length]]
+            slli c0 c0 [log2 [* 4 my-length stride]]
             add c0 c0 c1
           }]
           [lam [] {
@@ -484,17 +485,19 @@
       }]
     [def (split)
       [lam [(n-ranks num!) (get-rank get-rank!)]
-        [[[memregion-with-rank memregion-with-rank] c0 c1 base-address words start to end ranks n-ranks get-rank] output-name]]]
+        [[[memregion-with-rank memregion-with-rank] c0 c1 base-address words start to end by stride ranks n-ranks get-rank] output-name]]]
     [def (unroll)
       [lam [(block)]
       [lam [(n)]
-        [block { [* 4 n] (c0) }]]]]
+        [block { [* 4 n stride] (c0) }]]]]
     [def (post-unroll) [lam [(k)] {}]]
     [def (has-next) false-condition]
     [def (unroll-gcd [>! 0]) [- end start]]
     [iterator-new i init l my-length o output-name s split u unroll unroll-gcd p post-unroll h has-next]
     ]]]]
 [def (memregion)
-  [lam [(c0) (c1) (base-address) words (start) to (end)]
-    [memregion-with-rank c0 c1 base-address words start to end ranks 1 [lam [(r)] { li r 0 }]]]]
+  [lam [(c0) (c1) (base-address) words (start) to (end) by (stride)]
+    [memregion-with-rank c0 c1
+        base-address words start to end by stride
+        ranks 1 [lam [(r)] { li r 0 }]]]]
 [program]]
