@@ -186,7 +186,7 @@
     s (split [lamof num! get-rank!] [-> iterator!])
     u (unroll [lamof [-> block!]] [-> [∘ [lamof num!] [-> block!]]])
     (unroll-gcd num!)
-    p (post-unroll [lamof [divisor! length]] [-> block!])
+    p (post-unroll [lamof [multiple! unroll-gcd]] [-> block!])
     h (has-next condition!)
   ]
     [[addattr {iterator}]
@@ -415,9 +415,9 @@
         [[[cyclify cyclify] counter c1 [lam [(_)] splitted] times length] output]]]
     [def (unroll)
       [lam [(block [-> block!])]
-        [[iterator it-unroll] block]]]
+      [lam [(n)] [[[iterator it-unroll] block] [% n [iterator it-length]]]]]]
     [def (post-unroll)
-      [lam [(k [divisor! [iterator it-length]])]
+      [lam [(k)]
         {
           addi counter counter [- 0 k]
           [ifelse c1 [iterator it-has-next] {
