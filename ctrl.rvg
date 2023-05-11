@@ -208,6 +208,28 @@
 [def (it-has-next)
   [lam [(init) (length) (output) (split) (unroll) (unroll-gcd) (post-unroll) (has-next)] has-next]]
 
+[def (map)
+  [lam [(map [lamof num! id id] [-> pair!]) (it [-> iterator!])]
+  [lam [(output')]
+  [def (it) [it output']]
+  [def (unroll) [it it-unroll]]
+  [def (unroll)
+    [lam [(b)]
+    [lam [(n)]
+      [def (b')
+        [lam [(output)]
+          [def (setup,output) [map n output output']]
+          {
+            [fst setup,output]
+            [b [snd setup,output]]
+          }]]
+      [[unroll b'] n]]]]
+  [iterator-new i [it it-init] l [it it-length] o [it it-output] s [it it-split] u unroll [it it-unroll-gcd] p [it it-post-unroll] h [it it-has-next]]]]]
+
+[def (mapload)
+  [lam [(n) (addr) (output')]
+    [pair {lw output' [id addr]} output']]]
+
 [def (matrix)
   [lam [(m num!) by (n num!) at (r reg!)]
   [def (allocate block!) [allocate [* m n] r]]
@@ -219,7 +241,7 @@
         addi ptr ptr [* j ]
       }]]]]
 [def (matrix-allocate) matrix]
-[def (matrix-access) matrix]
+[def (matrix-rows) matrix]
 
 
 [def (subarray-new [-> iterable!])
