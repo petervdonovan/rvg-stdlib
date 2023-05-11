@@ -209,7 +209,7 @@
   [lam [(init) (length) (output) (split) (unroll) (unroll-gcd) (post-unroll) (has-next)] has-next]]
 
 [def (map)
-  [lam [(map [lamof num! id id] [-> pair!]) (it [-> iterator!])]
+  [lam [(it [-> iterator!]) (map [lamof num! id id] [-> pair!])]
   [lam [(output')]
   [def (it) [it output']]
   [def (unroll) [it it-unroll]]
@@ -228,18 +228,25 @@
 
 [def (mapload)
   [lam [(n) (addr) (output')]
-    [pair {lw output' [id addr]} output']]]
+    [pair {lw output' [fst addr] ( [snd addr] ) } output']]]
+
+[def (mapaddr)
+  [lam [(n) (addr) (output')]
+    [pair {} { [fst addr] ( [snd addr] ) }]]]
 
 [def (matrix)
   [lam [(m num!) by (n num!) at (r reg!)]
   [def (allocate block!) [allocate [* m n] r]]
-  [def (access [-> block!])
-    [lam [(ptr output!) (i input!) (j input!)]
-      {
-        slli ptr j [+ 2 [log2 m]]
-        addi ptr i r
-        addi ptr ptr [* j ]
-      }]]]]
+  [def (row-start-iterator) [subarray-new r of length m starting [lam [(r)] { mv r zero }] strided n]]
+  [def (row-iterator)
+    [lam [(c0) (c1) (c2)] [map [row-start-iterator c0 c1]
+      [lam [(j) (addr) (row)]
+        [pair
+          {
+            addi c2 [snd addr] [fst addr]
+          }
+          [array-new c2 of length n]]]]]]
+  ]]
 [def (matrix-allocate) matrix]
 [def (matrix-rows) matrix]
 
@@ -263,7 +270,7 @@
     [def (unroll)
       [lam [(block [-> block!])]
       [lam [(n)]
-        [block {[* n [* 4 stride]] (currentreg)}]]]]
+        [block [pair [* n [* 4 stride]] currentreg]]]]]
     [def (post-unroll)
       [lam [(k num!)]
         {
