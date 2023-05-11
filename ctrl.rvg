@@ -176,7 +176,7 @@
 [;; { iterator abstract data type }]
 [def (get-rank!) [∘ [lamof reg!] [-> block!]]]
 [def (iterator!) [assertify [lam [(x)] [[hasattr {iterator}] x]] {an iterator}]]
-[def (iterator-giver!) [∘ [lamof output!] [-> iterator!]]]
+[def (iterator-giver!) [∘ [lamof id] [-> iterator!]]]
 [def (iterable!) [-> iterator-giver!]]
 [def (iterator-new [-> iterator!])
   [lam [
@@ -208,36 +208,47 @@
 [def (it-has-next)
   [lam [(init) (length) (output) (split) (unroll) (unroll-gcd) (post-unroll) (has-next)] has-next]]
 
+[def (matrix)
+  [lam [(m num!) by (n num!) at (r reg!)]
+  [def (allocate block!) [allocate [* m n] r]]
+  [def (access [-> block!])
+    [lam [(ptr output!) (i input!) (j input!)]
+      {
+        slli ptr j [+ 2 [log2 m]]
+        addi ptr i r
+        addi ptr ptr [* j ]
+      }]]]]
+[def (matrix-allocate) matrix]
+[def (matrix-access) matrix]
+
+
 [def (subarray-new [-> iterable!])
   [lam [(array input!) of length (length num!) starting (get-rank get-rank!) strided (stride num!)]
   [lam [(c0 clobber!) (c1 clobber!)]
-  [lam [(output output!)]
+  [lam [(output-name)]
     [def (endreg) c1]
     [def (currentreg) c0]
     [def (init)
       {
         addi endreg array [* 4 length]
         [get-rank currentreg]
-        slli currentreg currentreg 2
+        slli currentreg currentreg [+ 2 [log2 stride]]
         add currentreg currentreg array
       }]
     [def (split)
       [lam [(n-ranks) (get-rank)]
-        [subarray-iterator c0 c1 array of length [/ length k] starting get-rank strided [* stride n-ranks]]]]
+        [[subarray-iterator c0 c1 array of length [/ length k] starting get-rank strided [* stride n-ranks]] output-name]]]
     [def (unroll)
       [lam [(block [-> block!])]
       [lam [(n)]
-        {
-          lw output [* n [* 4 stride]] (currentreg)
-          [block output]
-        }]]]
+        [block {[* n [* 4 stride]] (currentreg)}]]]]
     [def (post-unroll)
       [lam [(k num!)]
         {
           addi currentreg currentreg [* 4 [* k stride]]
         }]]
     [def (has-next) [!= currentreg endreg]]
-    [iterator-new i init l length o output s split u unroll 1 p post-unroll h has-next]]]]]
+    [iterator-new i init l length o output-name s split u unroll 1 p post-unroll h has-next]]]]]
 [def (array-new [-> iterable!])
   [lam [(array input!) of length (length num!)]
     [subarray-new array of length length starting [lam [(r)] { mv r zero }] strided 1]]]
