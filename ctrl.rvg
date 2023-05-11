@@ -234,25 +234,9 @@
   [lam [(n) (addr) (output')]
     [pair {} { [fst addr] ( [snd addr] ) }]]]
 
-[def (matrix)
-  [lam [(m num!) by (n num!) at (r reg!)]
-  [def (allocate block!) [allocate [* m n] r]]
-  [def (row-start-iterator) [subarray-new r of length m starting [lam [(r)] { mv r zero }] strided n]]
-  [def (row-iterator)
-    [lam [(c0) (c1) (c2)] [map [row-start-iterator c0 c1]
-      [lam [(j) (addr) (row)]
-        [pair
-          {
-            addi c2 [snd addr] [fst addr]
-          }
-          [array-new c2 of length n]]]]]]
-  ]]
-[def (matrix-allocate) matrix]
-[def (matrix-rows) matrix]
-
-
 [def (subarray-new [-> iterable!])
   [lam [(array input!) of length (length num!) starting (get-rank get-rank!) strided (stride num!)]
+
   [lam [(c0 clobber!) (c1 clobber!)]
   [lam [(output-name)]
     [def (endreg) c1]
@@ -277,10 +261,26 @@
           addi currentreg currentreg [* 4 [* k stride]]
         }]]
     [def (has-next) [!= currentreg endreg]]
-    [iterator-new i init l length o output-name s split u unroll 1 p post-unroll h has-next]]]]]
+    [iterator-new i init l [/ length stride] o output-name s split u unroll 1 p post-unroll h has-next]]]]]
 [def (array-new [-> iterable!])
   [lam [(array input!) of length (length num!)]
     [subarray-new array of length length starting [lam [(r)] { mv r zero }] strided 1]]]
+
+[def (matrix)
+  [lam [(m num!) by (n num!) at (r reg!)]
+  [def (allocate block!) [allocate [* m n] r]]
+  [def (row-start-iterator) [subarray-new r of length [* m n] starting [lam [(r)] { mv r zero }] strided n]]
+  [def (row-iterator)
+    [lam [(c0) (c1) (c2)] [map [row-start-iterator c0 c1]
+      [lam [(j) (addr) (row)]
+        [pair
+          {
+            addi c2 [snd addr] [fst addr]
+          }
+          [array-new c2 of length n]]]]]]
+  [lam [(get)] [get allocate row-iterator]]]]
+[def (matrix-allocate) [lam [(allocate) (row-iterator)] allocate]]
+[def (matrix-rows) [lam [(allocate) (row-iterator)] row-iterator]]
 
 [def (iterate [-> block!])
   [lam [(output) of (iterator [-> iterator!]) (block [blam! output])]
@@ -307,7 +307,7 @@
             cycles-of-not-taken-branch
             [*
               n-periods
-              [+ [cycles? core]]]]
+              [cycles? core]]]
         ])
       repeated]
     {
